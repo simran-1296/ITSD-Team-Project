@@ -2,17 +2,21 @@ package events;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import actions.PlayCardAction;
 import akka.actor.ActorRef;
 import commands.BasicCommands;
+import effects.ErrorEffect;
+import effects.GameEffect;
+import effects.ManaChangeEffect;
+import effects.SummonEffect;
 import structures.GameState;
 import structures.GameUnit;
+import structures.Pos;
 import structures.basic.Card;
 import structures.basic.Tile;
-import structures.basic.Unit;
-import structures.basic.UnitAnimationType;
 import systems.CombatSystem;
+import systems.GameEngine;
 import systems.MovementSystem;
-import utils.BasicObjectBuilders;
 
 import java.util.List;
 
@@ -56,6 +60,7 @@ public class TileClicked implements EventProcessor {
                                     int tilex, int tiley, Tile clickedTile) {
         Card card = gameState.getSelectedCard();
         int handPosition = gameState.getSelectedCardHandPosition();
+        int handIndex = handPosition - 1;
 
         // Check if clicked tile is a valid summon tile (highlighted)
         boolean isValidSummon = gameState.getHighlightedTiles().stream()
@@ -69,57 +74,31 @@ public class TileClicked implements EventProcessor {
 
         if (!isValidSummon) return;
 
-        // Deduct mana
-        int manaCost = card.getManacost();
-        gameState.getPlayer1().setMana(gameState.getPlayer1().getMana() - manaCost);
-        BasicCommands.setPlayer1Mana(out, gameState.getPlayer1());
-        try { Thread.sleep(50); } catch (InterruptedException e) { e.printStackTrace(); }
+        PlayCardAction action = new PlayCardAction(1, handIndex, new Pos(tilex, tiley));
+        List<GameEffect> effects = GameEngine.apply(gameState, action);
+        boolean didSummon = false;
 
-        // Remove card from hand and redraw hand
-        List<Card> hand = gameState.getPlayer1Hand();
-        hand.remove(handPosition - 1);
-        // Redraw remaining cards at correct positions
-        for (int i = 0; i < hand.size(); i++) {
-            BasicCommands.drawCard(out, hand.get(i), i + 1, 0);
-            try { Thread.sleep(20); } catch (InterruptedException e) { e.printStackTrace(); }
+        for (GameEffect effect : effects) {
+            if (effect instanceof ManaChangeEffect) {
+                ManaChangeEffect mana = (ManaChangeEffect) effect;
+                if (mana.getPlayerId() == 1) {
+                    BasicCommands.setPlayer1Mana(out, gameState.getPlayer1());
+                } else {
+                    BasicCommands.setPlayer2Mana(out, gameState.getPlayer2());
+                }
+                try { Thread.sleep(50); } catch (InterruptedException e) { e.printStackTrace(); }
+            } else if (effect instanceof SummonEffect) {
+                didSummon = true;
+                drawSummonedUnit(out, gameState, ((SummonEffect) effect).getPos());
+            } else if (effect instanceof ErrorEffect) {
+                BasicCommands.addPlayer1Notification(out, ((ErrorEffect) effect).getMessage(), 2);
+                return;
+            }
         }
-        // Delete the slot that no longer exists (if hand shrunk)
-        BasicCommands.deleteCard(out, hand.size() + 1);
-        try { Thread.sleep(20); } catch (InterruptedException e) { e.printStackTrace(); }
 
-        if (card.getIsCreature()) {
-            summonUnit(out, gameState, card, tilex, tiley, clickedTile);
+        if (didSummon) {
+            redrawPlayer1Hand(out, gameState);
         }
-        // Spell cards: add spell effect logic here in future sprints
-    }
-
-    private void summonUnit(ActorRef out, GameState gameState, Card card,
-                            int tilex, int tiley, Tile tile) {
-        int unitId = gameState.getAndIncrementUnitId();
-        Unit unitBase = BasicObjectBuilders.loadUnit(card.getUnitConfig(), unitId, Unit.class);
-        if (unitBase == null) return;
-
-        unitBase.setPositionByTile(tile);
-
-        int attack = card.getBigCard() != null ? card.getBigCard().getAttack() : 1;
-        int health = card.getBigCard() != null ? card.getBigCard().getHealth() : 1;
-
-        // Summoning sickness: hasMoved + hasAttacked start true, reset next turn
-        GameUnit newUnit = new GameUnit(unitBase, 1, attack, health, false);
-        newUnit.setHasMoved(true);
-        newUnit.setHasAttacked(true);
-        newUnit.setCardName(card.getCardname());
-
-        gameState.placeUnit(tilex, tiley, newUnit);
-
-        BasicCommands.drawUnit(out, unitBase, tile);
-        try { Thread.sleep(100); } catch (InterruptedException e) { e.printStackTrace(); }
-
-        BasicCommands.setUnitAttack(out, unitBase, attack);
-        try { Thread.sleep(50); } catch (InterruptedException e) { e.printStackTrace(); }
-
-        BasicCommands.setUnitHealth(out, unitBase, health);
-        try { Thread.sleep(50); } catch (InterruptedException e) { e.printStackTrace(); }
     }
 
     // -------------------------------------------------------------------------
@@ -274,5 +253,30 @@ public class TileClicked implements EventProcessor {
             }
         }
         return null;
+    }
+
+    private void redrawPlayer1Hand(ActorRef out, GameState gameState) {
+        List<Card> hand = gameState.getPlayer1Hand();
+        for (int i = 0; i < hand.size(); i++) {
+            BasicCommands.drawCard(out, hand.get(i), i + 1, 0);
+            try { Thread.sleep(20); } catch (InterruptedException e) { e.printStackTrace(); }
+        }
+        BasicCommands.deleteCard(out, hand.size() + 1);
+        try { Thread.sleep(20); } catch (InterruptedException e) { e.printStackTrace(); }
+    }
+
+    private void drawSummonedUnit(ActorRef out, GameState gameState, Pos pos) {
+        Tile tile = gameState.getTile(pos.x, pos.y);
+        GameUnit unit = gameState.getUnitOnTile(pos.x, pos.y);
+        if (tile == null || unit == null) return;
+
+        BasicCommands.drawUnit(out, unit.getUnit(), tile);
+        try { Thread.sleep(100); } catch (InterruptedException e) { e.printStackTrace(); }
+
+        BasicCommands.setUnitAttack(out, unit.getUnit(), unit.getAttack());
+        try { Thread.sleep(50); } catch (InterruptedException e) { e.printStackTrace(); }
+
+        BasicCommands.setUnitHealth(out, unit.getUnit(), unit.getHealth());
+        try { Thread.sleep(50); } catch (InterruptedException e) { e.printStackTrace(); }
     }
 }

@@ -7,9 +7,10 @@ import commands.BasicCommands;
 import structures.GameState;
 import structures.basic.Card;
 import structures.basic.Tile;
-import systems.MovementSystem;
+import systems.Rules;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Indicates that the user has clicked a card in their hand.
@@ -70,7 +71,10 @@ public class CardClicked implements EventProcessor {
 
         if (card.getIsCreature()) {
             // Highlight valid summon tiles (mode 1 = blue)
-            List<Tile> summonTiles = MovementSystem.getValidSummonTiles(gameState, 1);
+            List<Tile> summonTiles = Rules.getValidSummonTiles(gameState, 1).stream()
+                    .map(pos -> gameState.getTile(pos.x, pos.y))
+                    .filter(tile -> tile != null)
+                    .collect(Collectors.toList());
             for (Tile tile : summonTiles) {
                 BasicCommands.drawTile(out, tile, 1);
                 try { Thread.sleep(5); } catch (InterruptedException e) { e.printStackTrace(); }
