@@ -30,6 +30,7 @@ public final class Rules {
 
     public static boolean canPlayCreatureAt(GameState state, int playerId, int handIndex, Pos target) {
         if (state == null || target == null) return false;
+        if (playerId != 1 && playerId != 2) return false;
         if (state.getPlayer1() == null || state.getPlayer2() == null) return false;
         if (!isCurrentPlayersTurn(state, playerId)) return false;
 
