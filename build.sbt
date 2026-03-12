@@ -3,13 +3,13 @@ lazy val root = (project in file("."))
   .settings(
     name := "ITSD Card Game 25-26",
     version := "1.1",
-    scalaVersion := "2.13.10",
+    scalaVersion := "2.12.21",
     // https://github.com/sbt/junit-interface
     testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-v"),
     libraryDependencies ++= Seq(
       guice,
       ws,
-      "org.webjars" %% "webjars-play" % "2.8.0",
+      "org.webjars" %% "webjars-play" % "2.8.18",
       "org.webjars" % "bootstrap" % "2.3.2",
       "org.webjars" % "flot" % "0.8.3",
 
@@ -23,7 +23,6 @@ lazy val root = (project in file("."))
     libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.10.3",
     libraryDependencies += "junit" % "junit" % "4.13.2",
     libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test exclude("junit", "junit-dep"),
-    LessKeys.compress := true,
     javacOptions ++= Seq(
       "-Xlint:unchecked",
       "-Xlint:deprecation",
