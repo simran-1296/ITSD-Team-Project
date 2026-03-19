@@ -182,17 +182,14 @@ public final class CardSystem {
             );
 
             GameUnit newUnit = new GameUnit(wraith, playerId, 1, 1, false);
-<<<<<<< sprint4-XinZhang
             newUnit.setCardName("Wraithling");
             newUnit.addStatus(Status.SUMMONING_SICKNESS);
             newUnit.setHasMoved(true);
             newUnit.setHasAttacked(true);
-=======
             // Prevent the minions summoned by spells from attacking immediately
             newUnit.setHasMoved(true);
             newUnit.setHasAttacked(true);
 
->>>>>>> development
             state.placeUnit(x, y, newUnit);
 
         } catch (Exception e) {
@@ -226,20 +223,17 @@ public final class CardSystem {
                     );
 
                     GameUnit newUnit = new GameUnit(wraith, playerId, 1, 1, false);
-<<<<<<< sprint4-XinZhang
                     newUnit.setCardName("Wraithling");
                     newUnit.addStatus(Status.SUMMONING_SICKNESS);
                     newUnit.setHasMoved(true);
                     newUnit.setHasAttacked(true);
                     state.placeUnit(x, y, newUnit);
-=======
 
                     // Prevent the summoned minions by magic from attacking immediately
                     newUnit.setHasMoved(true);
                     newUnit.setHasAttacked(true);
 
                     state.placeUnit(x,y,newUnit);
->>>>>>> development
 
                     summoned++;
                     if (summoned == 3) return true;
