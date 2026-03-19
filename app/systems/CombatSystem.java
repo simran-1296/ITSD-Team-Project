@@ -11,7 +11,8 @@ import structures.basic.UnitAnimationType;
  */
 public final class CombatSystem {
 
-    private CombatSystem() {}
+    private CombatSystem() {
+    }
 
     public static void executeAttack(ActorRef out, GameState state, GameUnit attacker, GameUnit defender) {
         int defenderHealthBefore = defender.getHealth();
@@ -39,7 +40,11 @@ public final class CombatSystem {
 
         BasicCommands.playUnitAnimation(out, attacker.getUnit(), UnitAnimationType.idle);
         BasicCommands.playUnitAnimation(out, defender.getUnit(), UnitAnimationType.idle);
-        try { Thread.sleep(100); } catch (InterruptedException e) { e.printStackTrace(); }
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         if (defender.isDead()) {
             handleDeath(out, state, defender);
@@ -54,10 +59,14 @@ public final class CombatSystem {
                 && Math.abs(a.getTileY() - b.getTileY()) <= 1
                 && !(a.getTileX() == b.getTileX() && a.getTileY() == b.getTileY());
     }
-
+  
     private static void updateHealthUI(ActorRef out, GameState state, GameUnit unit, int previousHealth) {
         BasicCommands.setUnitHealth(out, unit.getUnit(), unit.getHealth());
-        try { Thread.sleep(50); } catch (InterruptedException e) { e.printStackTrace(); }
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         if (unit.isAvatar()) {
             if (unit.getOwner() == 1) {
@@ -77,16 +86,31 @@ public final class CombatSystem {
 
     private static void handleDeath(ActorRef out, GameState state, GameUnit unit) {
         int deathDuration = BasicCommands.playUnitAnimation(out, unit.getUnit(), UnitAnimationType.death);
-        try { Thread.sleep(deathDuration + 100); } catch (InterruptedException e) { e.printStackTrace(); }
+        try {
+            Thread.sleep(deathDuration + 100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         state.removeUnit(unit.getTileX(), unit.getTileY());
         BasicCommands.deleteUnit(out, unit.getUnit());
-        try { Thread.sleep(100); } catch (InterruptedException e) { e.printStackTrace(); }
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         if (unit.isAvatar()) {
             state.setGameOver(true);
             String msg = (unit.getOwner() == 1) ? "You Lose!" : "You Win!";
             BasicCommands.addPlayer1Notification(out, msg, 10);
+        }else {
+            // Notify all cards registered with ON_UNIT_DIED to activate their skills
+            state.getEffectResolver().fire(abilities.TriggerType.ON_UNIT_DIED, out, state, unit);
+
+            // Unregister dead unit to prevent graveyard triggers
+            state.getEffectResolver().unregister(unit);
         }
     }
+
 }
