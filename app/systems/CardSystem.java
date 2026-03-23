@@ -14,8 +14,6 @@ import structures.basic.Unit;
 import utils.BasicObjectBuilders;
 import utils.StaticConfFiles;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -101,14 +99,6 @@ public final class CardSystem {
                 gameUnit.setHasAttacked(true);
             }
 
-            if ("Saberspine Tiger".equals(card.getCardname())) {
-                gameUnit.setHasMoved(false);
-                gameUnit.setHasAttacked(false);
-            } else {
-                gameUnit.setHasMoved(true);
-                gameUnit.setHasAttacked(true);
-            }
-
             state.placeUnit(x, y, gameUnit);
             // Sprint 4: Connect register() - Register trigger-type effect
             String cardName = card.getCardname();
@@ -186,9 +176,6 @@ public final class CardSystem {
             newUnit.addStatus(Status.SUMMONING_SICKNESS);
             newUnit.setHasMoved(true);
             newUnit.setHasAttacked(true);
-            // Prevent the minions summoned by spells from attacking immediately
-            newUnit.setHasMoved(true);
-            newUnit.setHasAttacked(true);
 
             state.placeUnit(x, y, newUnit);
 
@@ -228,12 +215,6 @@ public final class CardSystem {
                     newUnit.setHasMoved(true);
                     newUnit.setHasAttacked(true);
                     state.placeUnit(x, y, newUnit);
-
-                    // Prevent the summoned minions by magic from attacking immediately
-                    newUnit.setHasMoved(true);
-                    newUnit.setHasAttacked(true);
-
-                    state.placeUnit(x,y,newUnit);
 
                     summoned++;
                     if (summoned == 3) return true;
@@ -333,30 +314,10 @@ public final class CardSystem {
     }
 
     private static int getPosX(Pos pos) {
-        try {
-            Field f = pos.getClass().getField("x");
-            return f.getInt(pos);
-        } catch (Exception ignored) { }
-
-        try {
-            Method m = pos.getClass().getMethod("getX");
-            return (Integer) m.invoke(pos);
-        } catch (Exception ignored) { }
-
-        throw new IllegalStateException("Cannot read x from Pos");
+        return pos.x;
     }
 
     private static int getPosY(Pos pos) {
-        try {
-            Field f = pos.getClass().getField("y");
-            return f.getInt(pos);
-        } catch (Exception ignored) { }
-
-        try {
-            Method m = pos.getClass().getMethod("getY");
-            return (Integer) m.invoke(pos);
-        } catch (Exception ignored) { }
-
-        throw new IllegalStateException("Cannot read y from Pos");
+        return pos.y;
     }
 }

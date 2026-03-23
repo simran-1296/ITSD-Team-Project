@@ -277,6 +277,7 @@ public class GameState {
      * its own avatar takes damage.
      */
     public void handleAvatarDamaged(int damagedOwnerId) {
+        // Zeal: buff friendly ZEAL units when avatar takes damage
         for (int x = 1; x <= 9; x++) {
             for (int y = 1; y <= 5; y++) {
                 GameUnit unit = unitBoard[x][y];
@@ -285,6 +286,12 @@ public class GameState {
                 if (!unit.hasKeyword(abilities.Keyword.ZEAL)) continue;
                 unit.setAttack(unit.getAttack() + 2);
             }
+        }
+
+        // Artifact robustness: reduce robustness on the damaged player's avatar
+        GameUnit avatar = (damagedOwnerId == 1) ? player1Avatar : player2Avatar;
+        if (avatar != null && avatar.hasArtifact()) {
+            avatar.reduceArtifactRobustness();
         }
     }
 

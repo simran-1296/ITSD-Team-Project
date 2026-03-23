@@ -1,5 +1,6 @@
 package systems;
 
+import abilities.TriggerType;
 import akka.actor.ActorRef;
 import commands.BasicCommands;
 import structures.GameState;
@@ -25,6 +26,7 @@ public final class CombatSystem {
         int damageToDefender = attacker.getAttack();
         defender.takeDamage(damageToDefender);
         updateHealthUI(out, state, defender, defenderHealthBefore);
+        state.getEffectResolver().fire(TriggerType.ON_DAMAGE_DEALT, out, state, attacker);
 
         boolean defenderDead = defender.isDead();
 
@@ -36,6 +38,7 @@ public final class CombatSystem {
             int damageToAttacker = defender.getAttack();
             attacker.takeDamage(damageToAttacker);
             updateHealthUI(out, state, attacker, attackerHealthBefore);
+            state.getEffectResolver().fire(TriggerType.ON_DAMAGE_DEALT, out, state, defender);
         }
 
         BasicCommands.playUnitAnimation(out, attacker.getUnit(), UnitAnimationType.idle);

@@ -24,6 +24,10 @@ public class GameUnit {
     private final Set<Keyword> keywords;
     private final Set<Status> statuses;
 
+    // Artifact (Sprint 5 - Member A)
+    private String equippedArtifact = null;
+    private int artifactRobustness = 0;
+
     // constructor
     public GameUnit(Unit unit, int owner, int attack, int health, boolean isAvatar) {
         this.unit = unit;
@@ -112,6 +116,24 @@ public class GameUnit {
      * Start-of-turn refresh for the active player's units.
      * Stunned units skip exactly one turn, then the stun is consumed.
      */
+    public boolean hasArtifact() { return equippedArtifact != null; }
+    public String getEquippedArtifact() { return equippedArtifact; }
+    public int getArtifactRobustness() { return artifactRobustness; }
+
+    public void equipArtifact(String artifactName, int robustness) {
+        this.equippedArtifact = artifactName;
+        this.artifactRobustness = robustness;
+    }
+
+    public void reduceArtifactRobustness() {
+        if (equippedArtifact == null) return;
+        artifactRobustness--;
+        if (artifactRobustness <= 0) {
+            equippedArtifact = null;
+            artifactRobustness = 0;
+        }
+    }
+
     public void startTurnReset() {
         if (hasStatus(Status.STUNNED)) {
             this.hasMoved = true;
