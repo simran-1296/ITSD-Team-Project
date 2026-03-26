@@ -73,42 +73,42 @@ public class TileClicked implements EventProcessor {
                 gameState.setSelectedUnit(null);
                 return;
             }
+        }
+        // MOVE
+        if (clickedUnit == null
+                && isMoveHighlighted(gameState, clickedTile)
+                && !selectedUnit.hasMoved()) {
 
-            // MOVE
-            if (clickedUnit == null
-                    && isMoveHighlighted(gameState, clickedTile)
-                    && !selectedUnit.hasMoved()) {
+            gameState.setUnitMoving(true);
 
-                gameState.setUnitMoving(true);
+            BasicCommands.moveUnitToTile(out,
+                    selectedUnit.getUnit(),
+                    clickedTile);
 
-                BasicCommands.moveUnitToTile(out,
-                        selectedUnit.getUnit(),
-                        clickedTile);
+            gameState.moveUnit(selectedUnit, x, y);
+            selectedUnit.setHasMoved(true);
 
-                gameState.moveUnit(selectedUnit, x, y);
-                selectedUnit.setHasMoved(true);
+            clearHighlights(out, gameState);
+            gameState.setSelectedUnit(null);
+            return;
+        }
 
-                clearHighlights(out, gameState);
-                gameState.setSelectedUnit(null);
-                return;
+        // RESELECT FRIENDLY
+        if (clickedUnit != null
+                && clickedUnit.getOwner() == gameState.getCurrentTurn()) {
+
+            clearHighlights(out, gameState);
+            gameState.setSelectedUnit(clickedUnit);
+
+            try {
+                Thread.sleep(60);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
 
-            // RESELECT FRIENDLY
-            if (clickedUnit != null
-                    && clickedUnit.getOwner() == gameState.getCurrentTurn()) {
-
-                clearHighlights(out, gameState);
-                gameState.setSelectedUnit(clickedUnit);
-
-                try {
-                    Thread.sleep(60);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                highlightActions(out, gameState, clickedUnit);
-                return;
-            }
+            highlightActions(out, gameState, clickedUnit);
+            return;
+        }
 
         // =====================================
         // SELECT UNIT

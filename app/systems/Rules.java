@@ -1,7 +1,9 @@
 package systems;
 
 import structures.GameState;
+import structures.GameUnit;
 import structures.Pos;
+import abilities.Status;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +14,8 @@ import java.util.List;
  */
 public final class Rules {
 
-    private Rules() {}
+    private Rules() {
+    }
 
     public static boolean isCurrentPlayersTurn(GameState state, int playerId) {
         return state.getCurrentTurn() == playerId;
@@ -28,9 +31,10 @@ public final class Rules {
         return false;
     }
 
-    public static boolean canUnitActThisTurn(structures.Unit u) {
-        if (u == null) return false;
-        return !u.hasStatus(abilities.Status.SUMMONING_SICKNESS)
-            && !u.hasStatus(abilities.Status.STUNNED);
+    public static boolean canUnitActThisTurn(GameUnit u) {
+        if (u == null)
+            return false;
+        return !u.hasStatus(Status.SUMMONING_SICKNESS)
+                && !u.hasStatus(Status.STUNNED);
     }
 }
