@@ -80,9 +80,7 @@ public class TileClicked implements EventProcessor {
 
                 gameState.setUnitMoving(true);
 
-                BasicCommands.moveUnitToTile(out,
-                        selectedUnit.getUnit(),
-                        clickedTile);
+                BasicCommands.moveUnitToTile(out, selectedUnit.getUnit(), clickedTile);
 
                 gameState.moveUnit(selectedUnit, x, y);
                 selectedUnit.setHasMoved(true);
@@ -100,7 +98,7 @@ public class TileClicked implements EventProcessor {
                 gameState.setSelectedUnit(clickedUnit);
 
                 try {
-                    Thread.sleep(60);
+                    Thread.sleep(40);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -138,13 +136,14 @@ public class TileClicked implements EventProcessor {
             int y) {
 
         int player = gameState.getCurrentTurn();
-        int handPos = gameState.getSelectedCardHandPosition() - 1;
+        int selectedHandPos = gameState.getSelectedCardHandPosition(); // 1-based
+        int handIndex = selectedHandPos - 1;
+
         String cardName = card.getCardname();
         GameUnit targetBefore = gameState.getUnitOnTile(x, y);
         Set<String> swarmEmptyTilesBefore = captureAdjacentEmptyTiles(gameState, player, cardName);
 
-        PlayCardAction action = new PlayCardAction(player, handPos, new Pos(x, y));
-
+        PlayCardAction action = new PlayCardAction(player, handIndex, new Pos(x, y));
         systems.CardSystem.playCard(gameState, action);
 
         GameUnit unit = gameState.getUnitOnTile(x, y);
@@ -157,8 +156,8 @@ public class TileClicked implements EventProcessor {
             refreshSpellUI(out, gameState, cardName, x, y, targetBefore, swarmEmptyTilesBefore);
         }
 
-        refreshMana(out, gameState);
-        refreshHand(out, gameState);
+        refreshCurrentPlayerMana(out, gameState);
+        refreshHandAfterPlay(out, gameState, selectedHandPos);
 
         gameState.setSelectedCard(null);
         gameState.setSelectedCardHandPosition(-1);
@@ -182,14 +181,14 @@ public class TileClicked implements EventProcessor {
                     BasicCommands.deleteUnit(out, targetBefore.getUnit());
                 }
             } else {
-                BasicCommands.setUnitHealth(out, targetAfter.getUnit(), targetAfter.getHealth());
+                BasicCommands.setUnitHealth(out, targetAfter.getUnit(), Math.max(0, targetAfter.getHealth()));
             }
             return;
         }
 
         if ("Sundrop Elixir".equals(cardName)) {
             if (targetAfter != null) {
-                BasicCommands.setUnitHealth(out, targetAfter.getUnit(), targetAfter.getHealth());
+                BasicCommands.setUnitHealth(out, targetAfter.getUnit(), Math.max(0, targetAfter.getHealth()));
             }
             return;
         }
@@ -254,7 +253,6 @@ public class TileClicked implements EventProcessor {
             GameState gameState,
             GameUnit avatar,
             Set<String> emptyTilesBefore) {
-
         if (avatar == null)
             return;
 
@@ -291,16 +289,9 @@ public class TileClicked implements EventProcessor {
         if (unit == null || tile == null)
             return;
 
-        BasicCommands.deleteUnit(out, unit.getUnit());
-        try {
-            Thread.sleep(30);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         BasicCommands.drawUnit(out, unit.getUnit(), tile);
         try {
-            Thread.sleep(30);
+            Thread.sleep(20);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -308,7 +299,7 @@ public class TileClicked implements EventProcessor {
         if (!unit.isAvatar()) {
             BasicCommands.setUnitAttack(out, unit.getUnit(), unit.getAttack());
             try {
-                Thread.sleep(20);
+                Thread.sleep(15);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -316,7 +307,7 @@ public class TileClicked implements EventProcessor {
 
         BasicCommands.setUnitHealth(out, unit.getUnit(), Math.max(0, unit.getHealth()));
         try {
-            Thread.sleep(20);
+            Thread.sleep(15);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -370,26 +361,35 @@ public class TileClicked implements EventProcessor {
     // UI
     // =====================================
 
-    private void refreshMana(ActorRef out, GameState state) {
-        BasicCommands.setPlayer1Mana(out, state.getPlayer1());
-        BasicCommands.setPlayer2Mana(out, state.getPlayer2());
+    private void refreshCurrentPlayerMana(ActorRef out, GameState state) {
+        if (state.getCurrentTurn() == 1) {
+            BasicCommands.setPlayer1Mana(out, state.getPlayer1());
+        } else {
+            BasicCommands.setPlayer2Mana(out, state.getPlayer2());
+        }
     }
 
-    private void refreshHand(ActorRef out, GameState state) {
+    private void refreshHandAfterPlay(ActorRef out, GameState state, int playedHandPosOneBased) {
+
         List<Card> hand = state.getCurrentTurn() == 1
                 ? state.getPlayer1Hand()
                 : state.getPlayer2Hand();
 
-        for (int i = 1; i <= 6; i++) {
-            BasicCommands.deleteCard(out, i);
-        }
+        int start = Math.max(playedHandPosOneBased - 1, 0);
 
-        for (int i = 0; i < hand.size() && i < 6; i++) {
-            BasicCommands.drawCard(out, hand.get(i), i + 1, 0);
+        for (int i = start; i < 6; i++) {
+            if (i < hand.size()) {
+                BasicCommands.drawCard(out, hand.get(i), i + 1, 0);
+            } else {
+                BasicCommands.deleteCard(out, i + 1);
+            }
         }
     }
 
     private void clearHighlights(ActorRef out, GameState state) {
+        if (state.getHighlightedTiles().isEmpty() && state.getAttackHighlightedTiles().isEmpty())
+            return;
+
         List<Tile> all = new ArrayList<>();
         all.addAll(state.getHighlightedTiles());
         all.addAll(state.getAttackHighlightedTiles());
