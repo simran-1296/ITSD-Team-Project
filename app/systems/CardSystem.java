@@ -149,7 +149,30 @@ public final class CardSystem {
             return castBeamshock(state, playerId, targetPos);
         }
 
+        if ("Horn of the Forsaken".equals(cardName)) {
+            return castHorn(state, playerId);
+        }
         return false;
+    }
+
+    private static boolean castHorn(GameState state, int playerId) {
+
+        GameUnit avatar = (playerId == 1)
+                ? state.getPlayer1Avatar()
+                : state.getPlayer2Avatar();
+
+        if (avatar == null) return false;
+
+        avatar.equipArtifact("Horn of the Forsaken", 3);
+
+
+        state.getEffectResolver().register(
+                abilities.TriggerType.ON_DAMAGE_DEALT,
+                new abilities.HornEffect(),
+                avatar
+        );
+
+        return true;
     }
 
     private static boolean castDarkTerminus(GameState state, int playerId, Pos pos) {

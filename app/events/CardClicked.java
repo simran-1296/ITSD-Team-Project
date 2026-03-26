@@ -55,12 +55,29 @@ public class CardClicked implements EventProcessor {
                 BasicCommands.drawTile(out, tile, 1);
             }
         } else {
-            List<Tile> spellTargets = findValidSpellTargets(gameState, card, gameState.getCurrentTurn());
-            gameState.setHighlightedTiles(spellTargets);
+            if ("Wraithling Swarm".equals(card.getCardname()) || "Horn of the Forsaken".equals(card.getCardname())) {
+                List<Tile> pseudoTargets = new ArrayList<>();
+                GameUnit avatar = (gameState.getCurrentTurn() == 1)
+                        ? gameState.getPlayer1Avatar()
+                        : gameState.getPlayer2Avatar();
 
-            int mode = isEnemyTargetSpell(card) ? 2 : 1;
-            for (Tile tile : spellTargets) {
-                BasicCommands.drawTile(out, tile, mode);
+                if (avatar != null) {
+                    Tile avatarTile = gameState.getTile(avatar.getTileX(), avatar.getTileY());
+                    if (avatarTile != null) pseudoTargets.add(avatarTile);
+                }
+
+                gameState.setHighlightedTiles(pseudoTargets);
+                for (Tile tile : pseudoTargets) {
+                    BasicCommands.drawTile(out, tile, 1);
+                }
+            } else {
+                List<Tile> spellTargets = findValidSpellTargets(gameState, card, gameState.getCurrentTurn());
+                gameState.setHighlightedTiles(spellTargets);
+
+                int mode = isEnemyTargetSpell(card) ? 2 : 1;
+                for (Tile tile : spellTargets) {
+                    BasicCommands.drawTile(out, tile, mode);
+                }
             }
         }
     }
