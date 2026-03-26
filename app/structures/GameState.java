@@ -277,7 +277,6 @@ public class GameState {
      * its own avatar takes damage.
      */
     public void handleAvatarDamaged(int damagedOwnerId) {
-        // Zeal: buff friendly ZEAL units when avatar takes damage
         for (int x = 1; x <= 9; x++) {
             for (int y = 1; y <= 5; y++) {
                 GameUnit unit = unitBoard[x][y];
@@ -288,15 +287,15 @@ public class GameState {
             }
         }
 
-        // Artifact robustness: reduce robustness on the damaged player's avatar
         GameUnit avatar = (damagedOwnerId == 1) ? player1Avatar : player2Avatar;
         if (avatar != null && avatar.hasArtifact()) {
             avatar.reduceArtifactRobustness();
+
+            if (!avatar.hasArtifact()) {
+                effectResolver.unregister(avatar);
+            }
         }
     }
-
-
-    // Turn switching and core logic (Sprint 2 - Yitong)
 
     /**
      * Handles all core logic for switching turns

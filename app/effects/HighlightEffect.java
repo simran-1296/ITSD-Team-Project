@@ -11,7 +11,9 @@ import java.util.List;
  * - Sprint 2 only uses SUMMON tiles highlighting.
  */
 public final class HighlightEffect implements GameEffect {
-    public enum Mode { MOVE, ATTACK, SUMMON }
+    public enum Mode {
+        MOVE, ATTACK, SUMMON
+    }
 
     private final List<Pos> positions;
     private final Mode mode;
@@ -21,6 +23,11 @@ public final class HighlightEffect implements GameEffect {
         this.mode = mode;
     }
 
-    public List<Pos> getPositions() { return Collections.unmodifiableList(positions); }
-    public Mode getMode() { return mode; }
+    public List<Pos> getPositions() {
+        return Collections.unmodifiableList(positions);
+    }
+
+    public Mode getMode() {
+        return mode;
+    }
 }
