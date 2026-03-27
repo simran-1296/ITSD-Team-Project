@@ -13,7 +13,7 @@
 		<script src="@routes.Assets.at("js/hexi.min.js")"></script>
 
     </head>
-    <body id="mainBody" wsdata="@routes.GameScreenController.socket.webSocketURL(request)" onload="init()">
+    <body id="mainBody" wsdata="@routes.GameScreenController.socket().webSocketURL(request)" onload="init()">
 
 
 	

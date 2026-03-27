@@ -34,7 +34,19 @@ public class Player {
 	public void setMana(int mana) {
 		this.mana = mana;
 	}
-	
+
+	/**
+	 * Reset and calculate mana at the start of the turn
+	 * Rule: Gain mana equal to 'turn number + 1'. Unused mana will be overwritten (lost)
+	 * @param turnNumber the current global turn number
+	 */
+	public void refreshMana(int turnNumber) {
+		int newMana = turnNumber + 1;
+		if (newMana > 9) {
+			newMana = 9; // set the maximum mana limit to 9
+		}
+		this.mana = newMana;
+	}
 	
 	
 }
