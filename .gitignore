@@ -70,3 +70,6 @@ target/
 project/target/
 project/project/
 
+.metals/
+.metals.log
+.metals.lock.db
